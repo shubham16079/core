@@ -1,6 +1,7 @@
 <?php
 
 namespace App;
+use Exception;
 use PDO;
 
 class Model
@@ -12,29 +13,28 @@ class Model
     protected array $bindParams = [];
     protected array $whereConditions = [];
 
+    /**
+     * @throws Exception
+     */
     public function getData()
     {
-        $database = new Database();
-        $conn = $database->getConnection();
-        if ($conn) {
-            $query = $this->setQuery();
-            $prepareQuery = $conn->prepare($query);
-            foreach ($this->bindParams as $index => $value) {
-                $prepareQuery->bindValue($index + 1, $value);
-            }
-
-            $prepareQuery->execute();
-            return $prepareQuery->fetchAll(PDO::FETCH_ASSOC);
-
-
-        } else {
-            echo "database error";
+        $conn = Database::getConnection();
+        $query = $this->setQuery();
+        $prepareQuery = $conn->prepare($query);
+        foreach ($this->bindParams as $index => $value) {
+            $prepareQuery->bindValue($index + 1, $value);
         }
+
+        $prepareQuery->execute();
+
+        return $prepareQuery->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function setTable($table)
+    public function query($table)
     {
         $this->table = $table;
+
+        return $this;
     }
 
     private function setQuery($columns = '*')
@@ -56,9 +56,11 @@ class Model
         return $query;
     }
 
-    public function limit(int $limit): void
+    public function limit(int $limit)
     {
         $this->limit = " LIMIT $limit";
+
+        return $this;
     }
 
     public function fields(array $fields)
@@ -68,11 +70,14 @@ class Model
         }
         $this->fields = implode(',', $fields);
 
+        return $this;
     }
 
     public function orderBy(string $column, string $orderType = 'ASC')
     {
-        return $this->orderBy = " ORDER BY $column $orderType";
+        $this->orderBy = " ORDER BY $column $orderType";
+
+        return $this;
     }
 
     public function where(string $column, string $operator, string $value)

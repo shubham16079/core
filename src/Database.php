@@ -2,30 +2,33 @@
 
 namespace App;
 
+use Exception;
 use PDO;
 use PDOException;
 
 class Database
 {
-    private $host = "localhost";
-    private $dbname = "coffeemug";
-    private $username = "root";
-    private $password = "password";
-    private $conn;
+    private static $host = "localhost";
+    private static $dbname = "coffeemug";
+    private static $username = "root";
+    private static $password = "password";
+    private static $conn;
 
-    public function __construct()
+    /**
+     * @throws Exception
+     */
+    public static function getConnection(): PDO
     {
-        try {
-            $this->conn = new PDO("mysql:host=$this->host;dbname=$this->dbname", $this->username, $this->password);
-            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $this->conn->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-        } catch (PDOException $e) {
-            throw new \Exception("Database connection failed: " . $e->getMessage());
+        if (empty($conn)) {
+            try {
+                self::$conn = new PDO("mysql:host=".self::$host.";dbname=" . self::$dbname, self::$username, self::$password);
+                self::$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                self::$conn->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+            } catch (PDOException $e) {
+                throw new \Exception("Database connection failed: " . $e->getMessage());
+            }
         }
-    }
 
-    public function getConnection(): PDO
-    {
-        return $this->conn;
+        return self::$conn;
     }
 }
